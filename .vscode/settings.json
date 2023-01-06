@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "window.h": "c",
+        "stdio.h": "c",
+        "xutil.h": "c"
+    }
+}
