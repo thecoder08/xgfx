@@ -30,6 +30,7 @@ char collide(Ball ball, Player player) {
 
 int main() {
     initWindow(WIDTH, HEIGHT, "Pong");
+
     Ball ball;
     ball.x = 300;
     ball.y = 200;
@@ -37,6 +38,7 @@ int main() {
     ball.yVelocity = 1;
     ball.color = 0x00ffffff;
     ball.radius = 5;
+
     Player player1;
     player1.x = 10;
     player1.y = 175;
@@ -45,6 +47,7 @@ int main() {
     player1.upPressed = 0;
     player1.downPressed = 0;
     player1.color = 0x00ffffff;
+
     Player player2;
     player2.x = 580;
     player2.y = 175;
@@ -53,6 +56,7 @@ int main() {
     player2.upPressed = 0;
     player2.downPressed = 0;
     player2.color = 0x00ffffff;
+
     while (1) {
         player1.y = ball.y - 25;
         player2.y = ball.y - 25;
@@ -72,6 +76,7 @@ int main() {
         }
         ball.x += ball.xVelocity;
         ball.y += ball.yVelocity;
+        
         rectangle(0, 0, WIDTH, HEIGHT, 0x00000000);
         rectangle(player1.x, player1.y, player1.width, player1.height, player1.color);
         rectangle(player2.x, player2.y, player2.width, player2.height, player2.color);
