@@ -1,5 +1,5 @@
-#include "window.h"
-#include "drawing.h"
+#include <xgfx/window.h>
+#include <xgfx/drawing.h>
 #include <stdio.h>
 
 #define WIDTH 600
