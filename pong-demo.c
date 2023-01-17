@@ -1,5 +1,5 @@
-#include <xgfx/window.h>
-#include <xgfx/drawing.h>
+#include "window.h"
+#include "drawing.h"
 #include <stdio.h>
 
 #define WIDTH 600
@@ -58,8 +58,54 @@ int main() {
     player2.color = 0x00ffffff;
 
     while (1) {
-        player1.y = ball.y - 25;
-        player2.y = ball.y - 25;
+        XEvent event;
+        int result = checkWindowEvents(&event);
+        if (result == 2) {
+            // the window has been closed, and memory freed. Do whatever cleanup you need then break the loop.
+            break;
+        }
+        if (result == 1) {
+            if (event.type == KeyPress) {
+                if (event.xkey.keycode == 25) {
+                    player1.upPressed = 1;
+                }
+                if (event.xkey.keycode == 39) {
+                    player1.downPressed = 1;
+                }
+                if (event.xkey.keycode == 111) {
+                    player2.upPressed = 1;
+                }
+                if (event.xkey.keycode == 116) {
+                    player2.downPressed = 1;
+                }
+            }
+            if (event.type == KeyRelease) {
+                if (event.xkey.keycode == 25) {
+                    player1.upPressed = 0;
+                }
+                if (event.xkey.keycode == 39) {
+                    player1.downPressed = 0;
+                }
+                if (event.xkey.keycode == 111) {
+                    player2.upPressed = 0;
+                }
+                if (event.xkey.keycode == 116) {
+                    player2.downPressed = 0;
+                }
+            }
+        }
+        if (player1.upPressed) {
+            player1.y--;
+        }
+        if (player1.downPressed) {
+            player1.y++;
+        }
+        if (player2.upPressed) {
+            player2.y--;
+        }
+        if (player2.downPressed) {
+            player2.y++;
+        }
         if ((ball.y > 395) || (ball.y < 5)) {
             ball.yVelocity = -ball.yVelocity;
         }
