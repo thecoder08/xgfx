@@ -1,6 +1,7 @@
 #include <xgfx/window.h>
 #include <xgfx/drawing.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #define WIDTH 600
 #define HEIGHT 400
@@ -34,8 +35,8 @@ int main() {
     Ball ball;
     ball.x = 300;
     ball.y = 200;
-    ball.xVelocity = 1;
-    ball.yVelocity = 1;
+    ball.xVelocity = 5;
+    ball.yVelocity = 5;
     ball.color = 0x00ffffff;
     ball.radius = 5;
 
@@ -95,16 +96,16 @@ int main() {
             }
         }
         if (player1.upPressed) {
-            player1.y--;
+            player1.y -= 5;
         }
         if (player1.downPressed) {
-            player1.y++;
+            player1.y += 5;
         }
         if (player2.upPressed) {
-            player2.y--;
+            player2.y -= 5;
         }
         if (player2.downPressed) {
-            player2.y++;
+            player2.y += 5;
         }
         if ((ball.y > 395) || (ball.y < 5)) {
             ball.yVelocity = -ball.yVelocity;
@@ -128,6 +129,7 @@ int main() {
         rectangle(player2.x, player2.y, player2.width, player2.height, player2.color);
         circle(ball.x, ball.y, ball.radius, ball.color);
         updateWindow();
+        usleep(16667);
     }
     return 0;
 }
