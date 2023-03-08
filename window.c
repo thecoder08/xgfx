@@ -24,8 +24,7 @@ void initWindow(int localWidth, int localHeight, const char* title) {
     wmDeleteMessage = XInternAtom(display, "WM_DELETE_WINDOW", 0);
     XSetWMProtocols(display, window, &wmDeleteMessage, 1);
     XSelectInput(display, window, KeyPressMask|KeyReleaseMask);
-    int supported;
-    XkbSetDetectableAutoRepeat(display, 1, &supported);
+    XAutoRepeatOff(display);
     XVisualInfo visualInfo;
     if (!XMatchVisualInfo(display, screen, 24, DirectColor, &visualInfo)) {
         printf("Error: Didn't match visual info!\n");
