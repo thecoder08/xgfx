@@ -1,15 +1,18 @@
 #include <X11/Xutil.h>
 #include <stdlib.h>
+#include <string.h>
 #include "drawing.h"
 
 extern XImage* image;
-extern int width;
-extern int height;
 
 void plot(int x, int y, int color) {
-  if (x > 0 && x < width && y > 0 && y < height) {
+  if (x > 0 && x < &image.width && y > 0 && y < &image.height) {
     XPutPixel(image, x, y, color);
   }
+}
+
+void clear() {
+  memset(&image.data, 0, &image.width * &image.height * &image.depth);
 }
 
 void rectangle(int x, int y, int width, int height, int color) {
