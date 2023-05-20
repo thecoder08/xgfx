@@ -6,13 +6,21 @@
 extern XImage* image;
 
 void plot(int x, int y, int color) {
-  if (x > 0 && x < &image.width && y > 0 && y < &image.height) {
+  if (x > 0 && x < image->width && y > 0 && y < image->height) {
     XPutPixel(image, x, y, color);
   }
 }
 
 void clear() {
-  memset(&image.data, 0, &image.width * &image.height * &image.depth);
+  memset(image->data, 0, image->width * image->height * image->depth);
+}
+
+void buffer(int x, int y, int width, int height, int depth, char* buffer) {
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      plot(x + j, y + i, buffer[i * width + j]);
+    }
+  }
 }
 
 void rectangle(int x, int y, int width, int height, int color) {

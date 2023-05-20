@@ -1,10 +1,14 @@
-#include <xgfx/window.h>
-#include <xgfx/drawing.h>
+#include "window.h"
+#include "drawing.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #define WIDTH 600
 #define HEIGHT 400
+
+#define EVENT_BUFFER_SIZE 100
+XEvent eventBuffer[sizeof(XEvent) * EVENT_BUFFER_SIZE];
 
 typedef struct {
     int x;
@@ -59,13 +63,14 @@ int main() {
     player2.color = 0x00ffffff;
 
     while (1) {
-        XEvent event;
-        int result = checkWindowEvents(&event);
-        if (result == 2) {
-            // the window has been closed, and memory freed. Do whatever cleanup you need then break the loop.
-            break;
-        }
-        if (result == 1) {
+        // read events and handle them
+        int eventsRead = checkWindowEvents(eventBuffer, EVENT_BUFFER_SIZE);
+        for (int i = 0; i < eventsRead; i++) {
+            XEvent event = eventBuffer[i];
+            if (event.type == ClosedWindow) {
+                // the window has been closed, and memory freed. Do whatever cleanup you need and then exit.
+                return 0;
+            }
             if (event.type == KeyPress) {
                 if (event.xkey.keycode == 25) {
                     player1.upPressed = 1;
@@ -81,6 +86,7 @@ int main() {
                 }
             }
             if (event.type == KeyRelease) {
+                printf("up for some reason\n");
                 if (event.xkey.keycode == 25) {
                     player1.upPressed = 0;
                 }
@@ -131,5 +137,4 @@ int main() {
         updateWindow();
         usleep(16667);
     }
-    return 0;
 }
