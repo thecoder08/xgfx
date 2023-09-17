@@ -6,7 +6,7 @@
 extern XImage* image;
 
 void plot(int x, int y, int color) {
-  if (x > 0 && x < image->width && y > 0 && y < image->height) {
+  if (x >= 0 && x < image->width && y >= 0 && y < image->height) {
     XPutPixel(image, x, y, color);
   }
 }

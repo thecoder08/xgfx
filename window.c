@@ -33,8 +33,11 @@ void initWindow(int width, int height, const char* title) {
 
 int checkWindowEvents(XEvent* eventBuffer, int eventBufferSize) {
     int count = 0;
-    while ((XPending(display) > 0) && (count != eventBufferSize)) {
-        XEvent* event = eventBuffer + (sizeof(XEvent) * count);
+    while ((XPending(display) > 0) && (count < eventBufferSize)) {
+        XEvent* event = eventBuffer + (count * sizeof(XEvent));
+        printf("count: %d\n", count + 1);
+        printf("%ld\n", sizeof(XEvent));
+        printf("%p\n", event);
         XNextEvent(display, event);
         if ((event->type == ClientMessage) && ((Atom)event->xclient.data.l[0] == wmDeleteMessage)) {
             XDestroyImage(image);

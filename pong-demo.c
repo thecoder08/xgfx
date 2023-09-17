@@ -8,7 +8,7 @@
 #define HEIGHT 400
 
 #define EVENT_BUFFER_SIZE 100
-XEvent eventBuffer[sizeof(XEvent) * EVENT_BUFFER_SIZE];
+XEvent eventBuffer[EVENT_BUFFER_SIZE];
 
 typedef struct {
     int x;
@@ -34,13 +34,14 @@ char collide(Ball ball, Player player) {
 }
 
 int main() {
+    printf("%ld\n", sizeof(eventBuffer)/sizeof(XEvent));
     initWindow(WIDTH, HEIGHT, "Pong");
 
     Ball ball;
     ball.x = 300;
     ball.y = 200;
-    ball.xVelocity = 5;
-    ball.yVelocity = 5;
+    ball.xVelocity = 1;//5;
+    ball.yVelocity = 1;//5;
     ball.color = 0x00ffffff;
     ball.radius = 5;
 
@@ -66,7 +67,9 @@ int main() {
         // read events and handle them
         int eventsRead = checkWindowEvents(eventBuffer, EVENT_BUFFER_SIZE);
         for (int i = 0; i < eventsRead; i++) {
+            printf("made it here");
             XEvent event = eventBuffer[i];
+            printf("made it there");
             if (event.type == ClosedWindow) {
                 // the window has been closed, and memory freed. Do whatever cleanup you need and then exit.
                 return 0;
@@ -86,7 +89,6 @@ int main() {
                 }
             }
             if (event.type == KeyRelease) {
-                printf("up for some reason\n");
                 if (event.xkey.keycode == 25) {
                     player1.upPressed = 0;
                 }
