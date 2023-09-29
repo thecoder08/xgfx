@@ -1,9 +1,10 @@
 #include <X11/Xutil.h>
-#include <X11/XKBlib.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include "window.h"
+
+#define new_min(x,y) (((x) <= (y)) ? (x) : (y))
 
 Display* display;
 Window window;
@@ -20,7 +21,6 @@ void initWindow(int width, int height, const char* title) {
     wmDeleteMessage = XInternAtom(display, "WM_DELETE_WINDOW", 0);
     XSetWMProtocols(display, window, &wmDeleteMessage, 1);
     XSelectInput(display, window, KeyPressMask|KeyReleaseMask);
-    XkbSetDetectableAutoRepeat(display, 1, NULL);
     XVisualInfo visualInfo;
     if (!XMatchVisualInfo(display, screen, 24, DirectColor, &visualInfo)) {
         printf("Error: Didn't match visual info!\n");
@@ -32,23 +32,18 @@ void initWindow(int width, int height, const char* title) {
 }
 
 int checkWindowEvents(XEvent* eventBuffer, int eventBufferSize) {
-    int count = 0;
-    while ((XPending(display) > 0) && (count < eventBufferSize)) {
-        XEvent* event = eventBuffer + (count * sizeof(XEvent));
-        printf("count: %d\n", count + 1);
-        printf("%ld\n", sizeof(XEvent));
-        printf("%p\n", event);
+    int eventsToRead = new_min(XPending(display), eventBufferSize);
+    for (int i = 0; i < eventsToRead; i++) {
+        XEvent* event = &eventBuffer[i];
         XNextEvent(display, event);
         if ((event->type == ClientMessage) && ((Atom)event->xclient.data.l[0] == wmDeleteMessage)) {
             XDestroyImage(image);
             XCloseDisplay(display);
-            // we set the very first event
-            eventBuffer->type = ClosedWindow;
+            event->type = ClosedWindow;
             return 1;
         }
-        count++;
     }
-    return count;
+    return eventsToRead;
 }
 
 void updateWindow() {

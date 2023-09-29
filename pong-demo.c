@@ -1,8 +1,6 @@
 #include "window.h"
 #include "drawing.h"
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 #define WIDTH 600
 #define HEIGHT 400
@@ -34,14 +32,13 @@ char collide(Ball ball, Player player) {
 }
 
 int main() {
-    printf("%ld\n", sizeof(eventBuffer)/sizeof(XEvent));
     initWindow(WIDTH, HEIGHT, "Pong");
 
     Ball ball;
     ball.x = 300;
     ball.y = 200;
-    ball.xVelocity = 1;//5;
-    ball.yVelocity = 1;//5;
+    ball.xVelocity = 3;
+    ball.yVelocity = 3;
     ball.color = 0x00ffffff;
     ball.radius = 5;
 
@@ -67,9 +64,7 @@ int main() {
         // read events and handle them
         int eventsRead = checkWindowEvents(eventBuffer, EVENT_BUFFER_SIZE);
         for (int i = 0; i < eventsRead; i++) {
-            printf("made it here");
             XEvent event = eventBuffer[i];
-            printf("made it there");
             if (event.type == ClosedWindow) {
                 // the window has been closed, and memory freed. Do whatever cleanup you need and then exit.
                 return 0;
@@ -137,6 +132,5 @@ int main() {
         rectangle(player2.x, player2.y, player2.width, player2.height, player2.color);
         circle(ball.x, ball.y, ball.radius, ball.color);
         updateWindow();
-        usleep(16667);
     }
 }
