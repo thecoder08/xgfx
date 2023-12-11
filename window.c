@@ -6,10 +6,21 @@
 
 #define new_min(x,y) (((x) <= (y)) ? (x) : (y))
 
+struct Image {
+  int width;
+  int height;
+  int depth;
+  int stride;
+  int size;
+  int* data;
+};
+
+struct Image* image;
+
 Display* display;
 Window window;
 int screen;
-XImage* image;
+XImage* ximage;
 Atom wmDeleteMessage;
 
 void initWindow(int width, int height, const char* title) {
@@ -27,8 +38,15 @@ void initWindow(int width, int height, const char* title) {
         return;
     }
     Visual* visual = visualInfo.visual;
-    char* framebuffer = malloc(width * height * 4);
-    image = XCreateImage(display, visual, 24, ZPixmap, 0, framebuffer, width, height, 8, 0);
+    image = malloc(sizeof(struct Image));
+    void* framebuffer = malloc(width * height * 4);
+    image->data = framebuffer;
+    image->width = width;
+    image->height = height;
+    image->depth = 4;
+    image->size = width*height*4;
+    image->stride = width*4;
+    ximage = XCreateImage(display, visual, 24, ZPixmap, 0, framebuffer, width, height, 8, 0);
 }
 
 int checkWindowEvents(XEvent* eventBuffer, int eventBufferSize) {
@@ -37,7 +55,7 @@ int checkWindowEvents(XEvent* eventBuffer, int eventBufferSize) {
         XEvent* event = &eventBuffer[i];
         XNextEvent(display, event);
         if ((event->type == ClientMessage) && ((Atom)event->xclient.data.l[0] == wmDeleteMessage)) {
-            XDestroyImage(image);
+            XDestroyImage(ximage);
             XCloseDisplay(display);
             event->type = ClosedWindow;
             return 1;
@@ -47,6 +65,6 @@ int checkWindowEvents(XEvent* eventBuffer, int eventBufferSize) {
 }
 
 void updateWindow() {
-    XPutImage(display, window, DefaultGC(display, screen), image, 0, 0, 0, 0, image->width, image->height);
+    XPutImage(display, window, DefaultGC(display, screen), ximage, 0, 0, 0, 0, image->width, image->height);
     usleep(10000);
 }

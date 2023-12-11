@@ -1,13 +1,22 @@
-#include <X11/Xutil.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "drawing.h"
 
-extern XImage* image;
+struct Image {
+  int width;
+  int height;
+  int depth;
+  int stride;
+  int size;
+  int* data;
+};
+
+extern struct Image* image;
 
 void plot(int x, int y, int color) {
   if (x >= 0 && x < image->width && y >= 0 && y < image->height) {
-    XPutPixel(image, x, y, color);
+    image->data[y*image->width + x] = color;
   }
 }
 
@@ -15,7 +24,7 @@ void clear() {
   memset(image->data, 0, image->width * image->height * image->depth);
 }
 
-void buffer(int x, int y, int width, int height, int depth, char* buffer) {
+void dBuffer(int x, int y, int width, int height, int depth, char* buffer) {
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       plot(x + j, y + i, buffer[i * width + j]);

@@ -2,6 +2,10 @@
     "files.associations": {
         "window.h": "c",
         "stdio.h": "c",
-        "xutil.h": "c"
+        "xutil.h": "c",
+        "wayland-client-protocol.h": "c",
+        "wayland-client.h": "c",
+        "surface.h": "c",
+        "drawing.h": "c"
     }
 }
