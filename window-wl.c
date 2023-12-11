@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wayland-client.h>
+#include "xdg-shell-protocol.h"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <errno.h>
@@ -11,8 +12,9 @@
 struct wl_display *display = NULL;
 struct wl_compositor *compositor = NULL;
 struct wl_surface *surface;
-struct wl_shell *shell;
-struct wl_shell_surface *shell_surface;
+struct xdg_wm_base *xdg_wm_base;
+struct xdg_surface *xdg_surface;
+struct xdg_toplevel *xdg_toplevel;
 struct wl_shm *shm;
 struct wl_buffer *buffer;
 struct wl_callback *frame_callback;
@@ -36,28 +38,27 @@ void (*paintPixels)();
 void (*keyChange)(unsigned int key, unsigned int state);
 
 static void
-handle_ping(void *data, struct wl_shell_surface *shell_surface,
+handle_ping(void *data, struct xdg_wm_base *xdg_wm_base,
 							uint32_t serial)
 {
-    wl_shell_surface_pong(shell_surface, serial);
+    xdg_wm_base_pong(xdg_wm_base, serial);
     fprintf(stderr, "Pinged and ponged\n");
 }
 
 static void
-handle_configure(void *data, struct wl_shell_surface *shell_surface,
-		 uint32_t edges, int32_t width, int32_t height)
+handle_configure(void *data,
+        struct xdg_surface *xdg_surface, uint32_t serial)
 {
+    printf("got xdg_surface configure\n");
+    xdg_surface_ack_configure(xdg_surface, serial);
 }
 
-static void
-handle_popup_done(void *data, struct wl_shell_surface *shell_surface)
-{
-}
+static const struct xdg_surface_listener xdg_surface_listener = {
+	.configure = handle_configure,
+};
 
-static const struct wl_shell_surface_listener shell_surface_listener = {
-	handle_ping,
-	handle_configure,
-	handle_popup_done
+static const struct xdg_wm_base_listener xdg_wm_base_listener = {
+    .ping = handle_ping,
 };
 
 static int
@@ -248,12 +249,14 @@ global_registry_handler(void *data, struct wl_registry *registry, uint32_t id,
 				      id, 
 				      &wl_compositor_interface, 
 				      1);
-    } else if (strcmp(interface, "wl_shell") == 0) {
-        shell = wl_registry_bind(registry, id,
-                                 &wl_shell_interface, 1);
     } else if (strcmp(interface, "wl_seat") == 0) {
         seat = wl_registry_bind(registry, id,
                                  &wl_seat_interface, 1);
+    } else if (strcmp(interface, "xdg_wm_base") == 0) {
+        xdg_wm_base = wl_registry_bind(registry, id,
+                                 &xdg_wm_base_interface, 1);
+        xdg_wm_base_add_listener(xdg_wm_base,
+                &xdg_wm_base_listener, NULL);
     } else if (strcmp(interface, "wl_shm") == 0) {
         shm = wl_registry_bind(registry, id,
                                  &wl_shm_interface, 1);
@@ -354,23 +357,28 @@ void initWindow(int width, int height, const char* title, void (*paint_pixels)()
 	fprintf(stderr, "Created surface\n");
     }
 
-    shell_surface = wl_shell_get_shell_surface(shell, surface);
-    if (shell_surface == NULL) {
-	fprintf(stderr, "Can't create shell surface\n");
+    xdg_surface = xdg_wm_base_get_xdg_surface(xdg_wm_base, surface);
+    if (xdg_surface == NULL) {
+	fprintf(stderr, "Can't create xdg surface\n");
 	exit(1);
     } else {
-	fprintf(stderr, "Created shell surface\n");
+	fprintf(stderr, "Created xdg surface\n");
     }
-    wl_shell_surface_set_toplevel(shell_surface);
 
-    wl_shell_surface_add_listener(shell_surface,
-				  &shell_surface_listener, NULL);
+    xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, NULL);
+
+    xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
+
+    xdg_toplevel_set_title(xdg_toplevel, title);
+    
+    wl_surface_commit(surface);
+    wl_display_roundtrip(display);
 
     frame_callback = wl_surface_frame(surface);
     wl_callback_add_listener(frame_callback, &frame_listener, NULL);
 
 keyboard = wl_seat_get_keyboard(seat);
-    if (surface == NULL) {
+    if (keyboard == NULL) {
 	fprintf(stderr, "Can't get keyboard\n");
 	exit(1);
     } else {
