@@ -1,7 +1,6 @@
 #include "window-wl.h"
 #include "drawing.h"
 #include <stdio.h>
-#include <unistd.h>
 
 #define WIDTH 600
 #define HEIGHT 400
@@ -126,7 +125,6 @@ int main() {
         }
         ball.x += ball.xVelocity;
         ball.y += ball.yVelocity;
-        usleep(10000);
     }
 }
 
