@@ -75,8 +75,8 @@ int main() {
 
     ball.x = 300;
     ball.y = 200;
-    ball.xVelocity = 3;
-    ball.yVelocity = 3;
+    ball.xVelocity = 2;
+    ball.yVelocity = 2;
     ball.color = 0x00ffffff;
     ball.radius = 5;
     
@@ -98,16 +98,16 @@ int main() {
 
     while (dispatchEvents() != -1) {
         if (player1.upPressed) {
-            player1.y -= 5;
+            player1.y -= 3;
         }
         if (player1.downPressed) {
-            player1.y += 5;
+            player1.y += 3;
         }
         if (player2.upPressed) {
-            player2.y -= 5;
+            player2.y -= 3;
         }
         if (player2.downPressed) {
-            player2.y += 5;
+            player2.y += 3;
         }
         if ((ball.y > 395) || (ball.y < 5)) {
             ball.yVelocity = -ball.yVelocity;

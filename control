@@ -1,5 +1,5 @@
 Package: libxgfx
-Version: 1.8.1
+Version: 1.8.2
 Architecture: amd64
 Maintainer: Lennon McLean <lmmclean08@gmail.com>
 Description: The X11 Graphics Library

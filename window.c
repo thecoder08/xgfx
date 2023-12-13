@@ -25,6 +25,10 @@ Atom wmDeleteMessage;
 
 void initWindow(int width, int height, const char* title) {
     display = XOpenDisplay(NULL);
+    if (display == NULL) {
+      fprintf(stderr, "Failed to connect to display!\n");
+      exit(1);
+    }
     screen = DefaultScreen(display);
     window = XCreateSimpleWindow(display, DefaultRootWindow(display), 0, 0, width, height, 0, BlackPixel(display, screen), WhitePixel(display, screen));
     XMapWindow(display, window);
@@ -35,7 +39,7 @@ void initWindow(int width, int height, const char* title) {
     XVisualInfo visualInfo;
     if (!XMatchVisualInfo(display, screen, 24, DirectColor, &visualInfo)) {
         printf("Error: Didn't match visual info!\n");
-        return;
+        exit(1);
     }
     Visual* visual = visualInfo.visual;
     image = malloc(sizeof(struct Image));
