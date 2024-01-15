@@ -1,5 +1,5 @@
 #!/bin/sh
-VERSION=1.8.2
+VERSION=1.9
 gcc -shared window.c drawing.c main.c -fPIC /usr/lib/x86_64-linux-gnu/Scrt1.o -lX11 -o libxgfx.so
 gcc -shared window-wl.c drawing.c main.c xdg-shell-protocol.c -fPIC /usr/lib/x86_64-linux-gnu/Scrt1.o -lwayland-client -o libxgfx-wl.so
 mkdir -p libxgfx/lib/x86_64-linux-gnu libxgfx/include/xgfx

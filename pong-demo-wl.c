@@ -70,8 +70,11 @@ void key_change(unsigned int key, unsigned int state) {
     }
 }
 
+void pointermotion(int x, int y) {}
+void pointerbutton(unsigned int button, unsigned int state) {}
+
 int main() {
-    initWindow(WIDTH, HEIGHT, "Pong", draw, key_change);
+    initWindow(WIDTH, HEIGHT, "Pong", draw, key_change, pointermotion, pointerbutton);
 
     ball.x = 300;
     ball.y = 200;

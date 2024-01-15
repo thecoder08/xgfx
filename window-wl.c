@@ -20,6 +20,7 @@ struct wl_buffer *buffer;
 struct wl_callback *frame_callback;
 struct wl_seat *seat;
 struct wl_keyboard *keyboard;
+struct wl_pointer *pointer;
 
 struct Image {
     int width;
@@ -36,20 +37,20 @@ static int WIDTH;
 static int HEIGHT;
 void (*paintPixels)();
 void (*keyChange)(unsigned int key, unsigned int state);
+void (*pointerMotion)(int pointerX, int pointerY);
+void (*pointerButton)(unsigned int button, unsigned int state);
 
 static void
 handle_ping(void *data, struct xdg_wm_base *xdg_wm_base,
 							uint32_t serial)
 {
     xdg_wm_base_pong(xdg_wm_base, serial);
-    fprintf(stderr, "Pinged and ponged\n");
 }
 
 static void
 handle_configure(void *data,
         struct xdg_surface *xdg_surface, uint32_t serial)
 {
-    printf("got xdg_surface configure\n");
     xdg_surface_ack_configure(xdg_surface, serial);
 }
 
@@ -321,9 +322,75 @@ static const struct wl_keyboard_listener keyboard_listener = {
     repeat_info
 };
 
-void initWindow(int width, int height, const char* title, void (*paint_pixels)(), void (*key_change)(unsigned int key, unsigned int state)) {
+void pointer_enter(void *data,
+		      struct wl_pointer *wl_pointer,
+		      uint32_t serial,
+		      struct wl_surface *surface,
+		      wl_fixed_t surface_x,
+		      wl_fixed_t surface_y) {}
+
+void pointer_leave(void *data,
+		      struct wl_pointer *wl_pointer,
+		      uint32_t serial,
+		      struct wl_surface *surface) {}
+
+void pointer_motion(void *data,
+		       struct wl_pointer *wl_pointer,
+		       uint32_t time,
+		       wl_fixed_t surface_x,
+		       wl_fixed_t surface_y) {
+    pointerMotion(wl_fixed_to_int(surface_x), wl_fixed_to_int(surface_y));
+}
+
+void pointer_button(void *data,
+		       struct wl_pointer *wl_pointer,
+		       uint32_t serial,
+		       uint32_t time,
+		       uint32_t button,
+		       uint32_t state) {
+    pointerButton(button, state);
+}
+
+void pointer_axis(void *data,
+		     struct wl_pointer *wl_pointer,
+		     uint32_t time,
+		     uint32_t axis,
+		     wl_fixed_t value) {}
+
+void pointer_frame(void *data,
+		      struct wl_pointer *wl_pointer) {}
+
+void pointer_axis_source(void *data,
+			    struct wl_pointer *wl_pointer,
+			    uint32_t axis_source) {}
+
+void pointer_axis_stop(void *data,
+			  struct wl_pointer *wl_pointer,
+			  uint32_t time,
+			  uint32_t axis) {}
+
+void pointer_axis_discrete(void *data,
+			      struct wl_pointer *wl_pointer,
+			      uint32_t axis,
+			      int32_t discrete) {}
+
+static const struct wl_pointer_listener pointer_listener = {
+    .enter = pointer_enter,
+    .leave = pointer_leave,
+    .motion = pointer_motion,
+    .button = pointer_button,
+    .axis = pointer_axis,
+    .frame = pointer_frame,
+    .axis_source = pointer_axis_source,
+    .axis_stop = pointer_axis_stop,
+    .axis_discrete = pointer_axis_discrete
+};
+
+void initWindow(int width, int height, const char* title, void (*paint_pixels)(), void (*key_change)(unsigned int key, unsigned int state), void (*pointer_motion_cb)(int pointerX, int pointerY), void (*pointer_button_cb)(unsigned int button, unsigned int state)) {
     paintPixels = paint_pixels;
     keyChange = key_change;
+    pointerMotion = pointer_motion_cb;
+    pointerButton = pointer_button_cb;
     WIDTH = width;
     HEIGHT = height;
     image = malloc(sizeof(struct Image));
@@ -377,7 +444,7 @@ void initWindow(int width, int height, const char* title, void (*paint_pixels)()
     frame_callback = wl_surface_frame(surface);
     wl_callback_add_listener(frame_callback, &frame_listener, NULL);
 
-keyboard = wl_seat_get_keyboard(seat);
+    keyboard = wl_seat_get_keyboard(seat);
     if (keyboard == NULL) {
 	fprintf(stderr, "Can't get keyboard\n");
 	exit(1);
@@ -385,6 +452,15 @@ keyboard = wl_seat_get_keyboard(seat);
 	fprintf(stderr, "Got keyboard\n");
     }
     wl_keyboard_add_listener(keyboard, &keyboard_listener, NULL);
+
+    pointer = wl_seat_get_pointer(seat);
+    if (pointer == NULL) {
+	fprintf(stderr, "Can't get pointer\n");
+	exit(1);
+    } else {
+	fprintf(stderr, "Got pointer\n");
+    }
+    wl_pointer_add_listener(pointer, &pointer_listener, NULL);
 
     create_window();
     redraw(NULL, NULL, 0);

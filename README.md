@@ -7,4 +7,6 @@ libxgfx includes two header files, window.h, for creating and updating a window 
 
 You can compile your code with the library by adding `-lxgfx` to your compiler options.
 ## Update
+
 libxgfx 1.7 now has a version that supports Wayland! it is distributed with the X11 version. You will probably need to refactor your code to use it. See [this](pong-demo-wl.c) for a demonstration.
+libxgfx 1.9 also supports mouse input on Wayland.
