@@ -108,8 +108,8 @@ int main() {
         }
         ball.x += ball.xVelocity;
         ball.y += ball.yVelocity;
-        
-        rectangle(0, 0, WIDTH, HEIGHT, 0x00000000);
+
+        clear();
         rectangle(player1.x, player1.y, player1.width, player1.height, player1.color);
         rectangle(player2.x, player2.y, player2.width, player2.height, player2.color);
         circle(ball.x, ball.y, ball.radius, ball.color);
