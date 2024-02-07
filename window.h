@@ -3,6 +3,16 @@
 #define MOUSE_BUTTON 3
 #define WINDOW_CLOSE 4
 
+#define BUTTON_LEFT 1
+#define BUTTON_MIDDLE 2
+#define BUTTON_RIGHT 3
+#define BUTTON_SCROLL_UP 4
+#define BUTTON_SCROLL_DOWN 5
+#define BUTTON_SCROLL_LEFT 6
+#define BUTTON_SCROLL_RIGHT 7
+#define BUTTON_BACKWARD 8
+#define BUTTON_FORWARD 9
+
 typedef struct {
   int width;
   int height;

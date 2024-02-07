@@ -322,8 +322,8 @@ void pointer_motion(void *data,
 		       wl_fixed_t surface_x,
 		       wl_fixed_t surface_y) {
     eventBuffer[eventIndex].type = MOUSE_MOVE;
-    eventBuffer[eventIndex].mousemove.x = surface_x;
-    eventBuffer[eventIndex].mousemove.y = surface_y;
+    eventBuffer[eventIndex].mousemove.x = wl_fixed_to_int(surface_x);
+    eventBuffer[eventIndex].mousemove.y = wl_fixed_to_int(surface_y);
     eventIndex++;
 }
 
@@ -333,17 +333,88 @@ void pointer_button(void *data,
 		       uint32_t time,
 		       uint32_t button,
 		       uint32_t state) {
-    eventBuffer[eventIndex].type = MOUSE_BUTTON;
-    eventBuffer[eventIndex].mousebutton.button = button;
-    eventBuffer[eventIndex].mousebutton.state = state;
-    eventIndex++;
+                if (button == 272) {
+                    eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                    eventBuffer[eventIndex].mousebutton.button = BUTTON_LEFT;
+                    eventBuffer[eventIndex].mousebutton.state = state;
+                    eventIndex++;
+                }
+                if (button == 273) {
+                    eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                    eventBuffer[eventIndex].mousebutton.button = BUTTON_RIGHT;
+                    eventBuffer[eventIndex].mousebutton.state = state;
+                    eventIndex++;
+                }
+                if (button == 274) {
+                    eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                    eventBuffer[eventIndex].mousebutton.button = BUTTON_MIDDLE;
+                    eventBuffer[eventIndex].mousebutton.state = state;
+                    eventIndex++;
+                }
+                if (button == 275) {
+                    eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                    eventBuffer[eventIndex].mousebutton.button = BUTTON_BACKWARD;
+                    eventBuffer[eventIndex].mousebutton.state = state;
+                    eventIndex++;
+                }
+                if (button == 276) {
+                    eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                    eventBuffer[eventIndex].mousebutton.button = BUTTON_FORWARD;
+                    eventBuffer[eventIndex].mousebutton.state = state;
+                    eventIndex++;
+                }
 }
 
 void pointer_axis(void *data,
 		     struct wl_pointer *wl_pointer,
 		     uint32_t time,
 		     uint32_t axis,
-		     wl_fixed_t value) {}
+		     wl_fixed_t value) {
+                if (axis == 0) {
+                    if (wl_fixed_to_int(value) > 0) {
+                        eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                        eventBuffer[eventIndex].mousebutton.button = BUTTON_SCROLL_DOWN;
+                        eventBuffer[eventIndex].mousebutton.state = 1;
+                        eventIndex++;
+                        eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                        eventBuffer[eventIndex].mousebutton.button = BUTTON_SCROLL_DOWN;
+                        eventBuffer[eventIndex].mousebutton.state = 0;
+                        eventIndex++;
+                    }
+                    if (wl_fixed_to_int(value) < 0) {
+                        eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                        eventBuffer[eventIndex].mousebutton.button = BUTTON_SCROLL_UP;
+                        eventBuffer[eventIndex].mousebutton.state = 1;
+                        eventIndex++;
+                        eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                        eventBuffer[eventIndex].mousebutton.button = BUTTON_SCROLL_UP;
+                        eventBuffer[eventIndex].mousebutton.state = 0;
+                        eventIndex++;
+                    }
+                }
+                if (axis == 1) {
+                    if (wl_fixed_to_int(value) > 0) {
+                        eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                        eventBuffer[eventIndex].mousebutton.button = BUTTON_SCROLL_LEFT;
+                        eventBuffer[eventIndex].mousebutton.state = 1;
+                        eventIndex++;
+                        eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                        eventBuffer[eventIndex].mousebutton.button = BUTTON_SCROLL_LEFT;
+                        eventBuffer[eventIndex].mousebutton.state = 0;
+                        eventIndex++;
+                    }
+                    if (wl_fixed_to_int(value) < 0) {
+                        eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                        eventBuffer[eventIndex].mousebutton.button = BUTTON_SCROLL_RIGHT;
+                        eventBuffer[eventIndex].mousebutton.state = 1;
+                        eventIndex++;
+                        eventBuffer[eventIndex].type = MOUSE_BUTTON;
+                        eventBuffer[eventIndex].mousebutton.button = BUTTON_SCROLL_RIGHT;
+                        eventBuffer[eventIndex].mousebutton.state = 0;
+                        eventIndex++;
+                    }
+                }
+             }
 
 void pointer_frame(void *data,
 		      struct wl_pointer *wl_pointer) {}

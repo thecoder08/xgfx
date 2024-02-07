@@ -61,9 +61,9 @@ int initWindow_xcb(int width, int height, const char* title) {
 
 int checkWindowEvent_xcb(Event* event) {
     xcb_generic_event_t* xcbevent;
-    if (xcbevent = xcb_poll_for_event(connection)) {
+    if ((xcbevent = xcb_poll_for_event(connection))) {
         switch(xcbevent->response_type & ~0x80) {
-            case XCB_CLIENT_MESSAGE:
+            case XCB_CLIENT_MESSAGE: {
             xcb_client_message_event_t* clientMessageEvent = (xcb_client_message_event_t*)xcbevent;
             if (clientMessageEvent->data.data32[0] == wmDeleteMessageXcb) {
                 shmdt(image.data);
@@ -74,40 +74,46 @@ int checkWindowEvent_xcb(Event* event) {
                 return 1;
             };
             return 0;
-            case XCB_KEY_PRESS:
+            }
+            case XCB_KEY_PRESS: {
             xcb_key_press_event_t* keypressEvent = (xcb_key_press_event_t*)xcbevent;
             event->type = KEY_CHANGE;
             event->keychange.state = 1;
             event->keychange.key = keypressEvent->detail - 8;
             return 1;
+            }
 
-            case XCB_KEY_RELEASE:
+            case XCB_KEY_RELEASE: {
             xcb_key_press_event_t* keyreleaseEvent = (xcb_key_press_event_t*)xcbevent;
             event->type = KEY_CHANGE;
             event->keychange.state = 0;
             event->keychange.key = keyreleaseEvent->detail - 8;
             return 1;
+            }
 
-            case XCB_MOTION_NOTIFY:
+            case XCB_MOTION_NOTIFY: {
             xcb_motion_notify_event_t* motionnotifyEvent = (xcb_motion_notify_event_t*)xcbevent;
             event->type = MOUSE_MOVE;
             event->mousemove.x = motionnotifyEvent->event_x;
             event->mousemove.y = motionnotifyEvent->event_y;
             return 1;
+            }
 
-            case XCB_BUTTON_PRESS:
+            case XCB_BUTTON_PRESS: {
             xcb_button_press_event_t* buttonpressEvent = (xcb_button_press_event_t*)xcbevent;
             event->type = MOUSE_BUTTON;
             event->mousebutton.state = 1;
             event->mousebutton.button = buttonpressEvent->detail;
             return 1;
+            }
 
-            case XCB_BUTTON_RELEASE:
+            case XCB_BUTTON_RELEASE: {
             xcb_button_release_event_t* buttonreleaseEvent = (xcb_button_release_event_t*)xcbevent;
             event->type = MOUSE_BUTTON;
             event->mousebutton.state = 0;
             event->mousebutton.button = buttonreleaseEvent->detail;
             return 1;
+            }
 
             default:
             return 0;
