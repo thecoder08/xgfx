@@ -6,6 +6,7 @@
         "wayland-client-protocol.h": "c",
         "wayland-client.h": "c",
         "surface.h": "c",
-        "drawing.h": "c"
+        "drawing.h": "c",
+        "window-xlib.h": "c"
     }
 }

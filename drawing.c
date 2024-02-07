@@ -2,28 +2,28 @@
 #include <string.h>
 #include "drawing.h"
 
-struct Image {
+typedef struct {
   int width;
   int height;
   int depth;
   int stride;
   int size;
   int* data;
-};
+} Image;
 
-extern struct Image* image;
+extern Image image;
 
 void plot(int x, int y, int color) {
-  if (x >= 0 && x < image->width && y >= 0 && y < image->height) {
-    image->data[y*image->width + x] = color;
+  if (x >= 0 && x < image.width && y >= 0 && y < image.height) {
+    image.data[y*image.width + x] = color;
   }
 }
 
 void clear() {
-  memset(image->data, 0, image->width * image->height * image->depth);
+  memset(image.data, 0, image.size);
 }
 
-void dBuffer(int x, int y, int width, int height, int depth, char* buffer) {
+void buffer(int x, int y, int width, int height, int depth, char* buffer) {
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       plot(x + j, y + i, buffer[i * width + j]);

@@ -5,9 +5,6 @@
 #define WIDTH 600
 #define HEIGHT 400
 
-#define EVENT_BUFFER_SIZE 100
-XEvent eventBuffer[EVENT_BUFFER_SIZE];
-
 typedef struct {
     int x;
     int y;
@@ -62,39 +59,24 @@ int main() {
 
     while (1) {
         // read events and handle them
-        int eventsRead = checkWindowEvents(eventBuffer, EVENT_BUFFER_SIZE);
-        for (int i = 0; i < eventsRead; i++) {
-            XEvent event = eventBuffer[i];
-            if (event.type == ClosedWindow) {
+        Event event;
+        while (checkWindowEvent(&event)) {
+            if (event.type == WINDOW_CLOSE) {
                 // the window has been closed, and memory freed. Do whatever cleanup you need and then exit.
                 return 0;
             }
-            if (event.type == KeyPress) {
-                if (event.xkey.keycode == 25) {
-                    player1.upPressed = 1;
+            if (event.type == KEY_CHANGE) {
+                if (event.keychange.key == 17) {
+                    player1.upPressed = event.keychange.state;
                 }
-                if (event.xkey.keycode == 39) {
-                    player1.downPressed = 1;
+                if (event.keychange.key == 31) {
+                    player1.downPressed = event.keychange.state;
                 }
-                if (event.xkey.keycode == 111) {
-                    player2.upPressed = 1;
+                if (event.keychange.key == 103) {
+                    player2.upPressed = event.keychange.state;
                 }
-                if (event.xkey.keycode == 116) {
-                    player2.downPressed = 1;
-                }
-            }
-            if (event.type == KeyRelease) {
-                if (event.xkey.keycode == 25) {
-                    player1.upPressed = 0;
-                }
-                if (event.xkey.keycode == 39) {
-                    player1.downPressed = 0;
-                }
-                if (event.xkey.keycode == 111) {
-                    player2.upPressed = 0;
-                }
-                if (event.xkey.keycode == 116) {
-                    player2.downPressed = 0;
+                if (event.keychange.key == 108) {
+                    player2.downPressed = event.keychange.state;
                 }
             }
         }

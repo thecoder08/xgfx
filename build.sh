@@ -1,10 +1,9 @@
 #!/bin/sh
-VERSION=1.9
-gcc -shared window.c drawing.c main.c -fPIC /usr/lib/x86_64-linux-gnu/Scrt1.o -lX11 -o libxgfx.so
-gcc -shared window-wl.c drawing.c main.c xdg-shell-protocol.c -fPIC /usr/lib/x86_64-linux-gnu/Scrt1.o -lwayland-client -o libxgfx-wl.so
+VERSION=2.0
+gcc -shared main.c window.c window-wl.c window-xcb.c window-xlib.c drawing.c xdg-shell-protocol.c -fPIC /usr/lib/x86_64-linux-gnu/Scrt1.o -o libxgfx.so -lwayland-client -lX11 -lxcb -lxcb-shm
 mkdir -p libxgfx/lib/x86_64-linux-gnu libxgfx/include/xgfx
-mv libxgfx.so libxgfx-wl.so libxgfx/lib/x86_64-linux-gnu
-cp drawing.h window.h window-wl.h libxgfx/include/xgfx
+mv libxgfx.so libxgfx/lib/x86_64-linux-gnu
+cp drawing.h window.h libxgfx/include/xgfx
 tar -czvf libxgfx_${VERSION}_1_amd64.tar.gz libxgfx
 mkdir -p libxgfx_${VERSION}_1_amd64/DEBIAN
 cp control libxgfx_${VERSION}_1_amd64/DEBIAN

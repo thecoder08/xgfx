@@ -7,38 +7,27 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <unistd.h>
+#include "window.h"
 #include "window-wl.h"
 
-struct wl_display *display = NULL;
-struct wl_compositor *compositor = NULL;
-struct wl_surface *surface;
-struct xdg_wm_base *xdg_wm_base;
-struct xdg_surface *xdg_surface;
-struct xdg_toplevel *xdg_toplevel;
-struct wl_shm *shm;
-struct wl_buffer *buffer;
-struct wl_callback *frame_callback;
-struct wl_seat *seat;
-struct wl_keyboard *keyboard;
-struct wl_pointer *pointer;
+static struct wl_display *display = NULL;
+static struct wl_compositor *compositor = NULL;
+static struct wl_surface *surface;
+static struct xdg_wm_base *xdg_wm_base;
+static struct xdg_surface *xdg_surface;
+static struct xdg_toplevel *xdg_toplevel;
+static struct wl_shm *shm;
+static struct wl_buffer *buffer;
+static struct wl_callback *frame_callback;
+static struct wl_seat *seat;
+static struct wl_keyboard *keyboard;
+static struct wl_pointer *pointer;
 
-struct Image {
-    int width;
-    int height;
-    int depth;
-    int stride;
-    int size;
-    int* data;
-};
+extern Image image;
 
-struct Image* image;
-
-static int WIDTH;
-static int HEIGHT;
-void (*paintPixels)();
-void (*keyChange)(unsigned int key, unsigned int state);
-void (*pointerMotion)(int pointerX, int pointerY);
-void (*pointerButton)(unsigned int button, unsigned int state);
+int eventIndex = 0;
+int eventRead = 0;
+Event eventBuffer[100];
 
 static void
 handle_ping(void *data, struct xdg_wm_base *xdg_wm_base,
@@ -159,13 +148,10 @@ uint32_t pixel_value = 0x0; // black
 static const struct wl_callback_listener frame_listener;
 
 static void
-redraw(void *data, struct wl_callback *callback, uint32_t time)
-{
-    // fprintf(stderr, "Redrawing\n");   
+redraw(void *data, struct wl_callback *callback, uint32_t time) {
     wl_callback_destroy(frame_callback);
     wl_surface_damage(surface, 0, 0,
-    		WIDTH, HEIGHT); 
-    paintPixels();
+    		image.width, image.height);
     frame_callback = wl_surface_frame(surface);
     wl_surface_attach(surface, buffer, 0, 0);
     wl_callback_add_listener(frame_callback, &frame_listener, NULL);
@@ -179,35 +165,28 @@ static const struct wl_callback_listener frame_listener = {
 static struct wl_buffer *
 create_buffer() {
     struct wl_shm_pool *pool;
-    int stride = WIDTH * 4; // 4 bytes per pixel
-    int size = stride * HEIGHT;
     int fd;
     struct wl_buffer *buff;
 
-    image->width = WIDTH;
-    image->height = HEIGHT;
-    image->depth = 4;
-    image->stride = stride;
-    image->size = size;
 
-    fd = os_create_anonymous_file(size);
+    fd = os_create_anonymous_file(image.size);
     if (fd < 0) {
 	fprintf(stderr, "creating a buffer file for %d B failed: %m\n",
-		size);
+		image.size);
 	exit(1);
     }
     
-    image->data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (image->data == MAP_FAILED) {
+    image.data = mmap(NULL, image.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (image.data == MAP_FAILED) {
 	fprintf(stderr, "mmap failed: %m\n");
 	close(fd);
 	exit(1);
     }
 
-    pool = wl_shm_create_pool(shm, fd, size);
+    pool = wl_shm_create_pool(shm, fd, image.size);
     buff = wl_shm_pool_create_buffer(pool, 0,
-					  WIDTH, HEIGHT,
-					  stride, 	
+					  image.width, image.height,
+					  image.stride, 	
 					  WL_SHM_FORMAT_XRGB8888);
     //wl_buffer_add_listener(buffer, &buffer_listener, buffer);
     wl_shm_pool_destroy(pool);
@@ -220,7 +199,7 @@ create_window() {
     buffer = create_buffer();
 
     wl_surface_attach(surface, buffer, 0, 0);
-    //wl_surface_damage(surface, 0, 0, WIDTH, HEIGHT);
+    //wl_surface_damage(surface, 0, 0, image.width, image.height);
     wl_surface_commit(surface);
 }
 
@@ -295,7 +274,10 @@ void keymap(void *data,
 		      struct wl_surface *surface) {}
 	
 void key(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
-    keyChange(key, state);
+    eventBuffer[eventIndex].type = KEY_CHANGE;
+    eventBuffer[eventIndex].keychange.key = key;
+    eventBuffer[eventIndex].keychange.state = state;
+    eventIndex++;
 }
 
 	void modifiers(void *data,
@@ -339,7 +321,10 @@ void pointer_motion(void *data,
 		       uint32_t time,
 		       wl_fixed_t surface_x,
 		       wl_fixed_t surface_y) {
-    pointerMotion(wl_fixed_to_int(surface_x), wl_fixed_to_int(surface_y));
+    eventBuffer[eventIndex].type = MOUSE_MOVE;
+    eventBuffer[eventIndex].mousemove.x = surface_x;
+    eventBuffer[eventIndex].mousemove.y = surface_y;
+    eventIndex++;
 }
 
 void pointer_button(void *data,
@@ -348,7 +333,10 @@ void pointer_button(void *data,
 		       uint32_t time,
 		       uint32_t button,
 		       uint32_t state) {
-    pointerButton(button, state);
+    eventBuffer[eventIndex].type = MOUSE_BUTTON;
+    eventBuffer[eventIndex].mousebutton.button = button;
+    eventBuffer[eventIndex].mousebutton.state = state;
+    eventIndex++;
 }
 
 void pointer_axis(void *data,
@@ -386,18 +374,16 @@ static const struct wl_pointer_listener pointer_listener = {
     .axis_discrete = pointer_axis_discrete
 };
 
-void initWindow(int width, int height, const char* title, void (*paint_pixels)(), void (*key_change)(unsigned int key, unsigned int state), void (*pointer_motion_cb)(int pointerX, int pointerY), void (*pointer_button_cb)(unsigned int button, unsigned int state)) {
-    paintPixels = paint_pixels;
-    keyChange = key_change;
-    pointerMotion = pointer_motion_cb;
-    pointerButton = pointer_button_cb;
-    WIDTH = width;
-    HEIGHT = height;
-    image = malloc(sizeof(struct Image));
+int initWindow_wl(int width, int height, const char* title) {
+    image.width = width;
+    image.height = height;
+    image.depth = 4;
+    image.size = width*height*4;
+    image.stride = width*4;
     display = wl_display_connect(NULL);
     if (display == NULL) {
 	fprintf(stderr, "Can't connect to display\n");
-	exit(1);
+	return 1;
     }
     printf("connected to display\n");
 
@@ -464,14 +450,25 @@ void initWindow(int width, int height, const char* title, void (*paint_pixels)()
 
     create_window();
     redraw(NULL, NULL, 0);
+    return 0;
 }
 
-int dispatchEvents() {
-    return wl_display_dispatch(display);
+int checkWindowEvent_wl(Event* event) {
+    if (eventIndex > eventRead) {
+        *event = eventBuffer[eventRead];
+        eventRead++;
+        return 1;
+    }
+    return 0;
 }
 
-void closeWindow() {
-    free(image);
-    wl_display_disconnect(display);
-    printf("disconnected from display\n");
+void updateWindow_wl() {
+    eventIndex = 0;
+    eventRead = 0;
+    if (wl_display_dispatch(display) == -1) {
+        wl_display_disconnect(display);
+        eventBuffer[eventIndex].type = WINDOW_CLOSE;
+        eventIndex++;
+    }
+    usleep(10000);
 }
