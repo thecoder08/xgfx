@@ -1,6 +1,6 @@
 #!/bin/sh
-VERSION=2.1
-gcc -shared main.c window.c window-wl.c window-xcb.c window-xlib.c drawing.c xdg-shell-protocol.c -fPIC /usr/lib/x86_64-linux-gnu/Scrt1.o -o libxgfx.so -lwayland-client -lX11 -lxcb -lxcb-shm
+VERSION=2.2
+gcc -shared main.c window.c window-wl.c window-xcb.c window-xlib.c drawing.c xdg-shell.c -fPIC /usr/lib/x86_64-linux-gnu/Scrt1.o -o libxgfx.so -lwayland-client -lX11 -lxcb -lxcb-shm
 strip --strip-all libxgfx.so
 mkdir -p libxgfx/lib/x86_64-linux-gnu libxgfx/include/xgfx
 mv libxgfx.so libxgfx/lib/x86_64-linux-gnu
