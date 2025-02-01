@@ -382,4 +382,5 @@ void updateWindow_wl() {
     while(!can_use_buffer) {
         wl_display_dispatch(display);
     }
+    usleep(10000);
 }
