@@ -1,5 +1,5 @@
 Package: libxgfx
-Version: 2.3
+Version: 2.4
 Architecture: amd64
 Maintainer: Lennon McLean <lmmclean08@gmail.com>
 Description: The X11 Graphics Library

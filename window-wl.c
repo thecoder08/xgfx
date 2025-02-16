@@ -23,8 +23,6 @@ int eventIndex = 0;
 int eventRead = 0;
 Event eventBuffer[100];
 
-int can_use_buffer = 1;
-
 void global_handler(void* data, struct wl_registry* registry, unsigned int name, const char* interface, unsigned int version) {
     if (strcmp(interface, "wl_compositor") == 0) {
         compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 4);
@@ -84,14 +82,6 @@ struct xdg_surface_listener surface_listener = {
     .configure = surface_configure_handler
 };
 
-void buffer_release(void* data, struct wl_buffer* buffer) {
-    can_use_buffer = 1;
-}
-
-struct wl_buffer_listener buffer_listener = {
-    .release = buffer_release
-};
-
 /* input handling shit (copied from old window-wl.c) */
 
 void keymap(void *data,
@@ -105,12 +95,12 @@ void keymap(void *data,
 		      uint32_t serial,
 		      struct wl_surface *surface,
 		      struct wl_array *keys) {}
-	
+
 	void leave(void *data,
 		      struct wl_keyboard *wl_keyboard,
 		      uint32_t serial,
 		      struct wl_surface *surface) {}
-	
+
 void key(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
     eventBuffer[eventIndex].type = KEY_CHANGE;
     eventBuffer[eventIndex].keychange.key = key;
@@ -343,7 +333,6 @@ int initWindow_wl(int width, int height, const char* title) {
 
     struct wl_shm_pool* shm_pool = wl_shm_create_pool(shm, shmFd, image.size);
     buffer = wl_shm_pool_create_buffer(shm_pool, 0, image.width, image.height, image.stride, WL_SHM_FORMAT_XRGB8888);
-    wl_buffer_add_listener(buffer, &buffer_listener, NULL);
 
     image.data = mmap(NULL, image.size, PROT_READ | PROT_WRITE, MAP_SHARED, shmFd, 0);
     if (image.data == NULL) {
@@ -364,6 +353,9 @@ int initWindow_wl(int width, int height, const char* title) {
 }
 
 int checkWindowEvent_wl(Event* event) {
+    wl_display_prepare_read(display);
+    wl_display_read_events(display);
+    wl_display_dispatch_pending(display);
     if (eventIndex > eventRead) {
         *event = eventBuffer[eventRead];
         eventRead++;
@@ -378,9 +370,6 @@ void updateWindow_wl() {
     wl_surface_attach(surface, buffer, 0, 0);
     wl_surface_damage_buffer(surface, 0, 0, 640, 480);
     wl_surface_commit(surface);
-    can_use_buffer = 0; // we can't modify the buffer again until we recieve a release event
-    while(!can_use_buffer) {
-        wl_display_dispatch(display);
-    }
+    wl_display_flush(display);
     usleep(10000);
 }
