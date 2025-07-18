@@ -368,7 +368,7 @@ void updateWindow_wl() {
     eventIndex = 0;
     eventRead = 0;
     wl_surface_attach(surface, buffer, 0, 0);
-    wl_surface_damage_buffer(surface, 0, 0, 640, 480);
+    wl_surface_damage_buffer(surface, 0, 0, image.width, image.height);
     wl_surface_commit(surface);
     wl_display_flush(display);
     usleep(10000);
