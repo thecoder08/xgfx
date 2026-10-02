@@ -320,8 +320,8 @@ int initWindow_wl(int width, int height, const char* title) {
     xdg_toplevel_add_listener(toplevel, &toplevel_listener, NULL);
 
 
-    int shmFd = shm_open("waylandShmFile", O_CREAT | O_RDWR, 0600);
-    shm_unlink("waylandShmFile");
+    int shmFd = shm_open("xgfxShmFile", O_CREAT | O_RDWR, 0600);
+    shm_unlink("xgfxShmFile");
     if (shmFd == -1) {
         fprintf(stderr, "Failed to create shm file\n");
         return 1;

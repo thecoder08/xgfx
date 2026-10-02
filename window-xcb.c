@@ -1,8 +1,9 @@
 #include <string.h>
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
-#include <sys/shm.h>
+#include <sys/mman.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include "window.h"
@@ -15,7 +16,6 @@ xcb_window_t windowXcb;
 xcb_gcontext_t gc;
 xcb_atom_t wmDeleteMessageXcb;
 xcb_shm_seg_t segment;
-int shmid;
 
 int initWindow_xcb(int width, int height, const char* title) {
     connection = xcb_connect(NULL, NULL);
@@ -23,10 +23,23 @@ int initWindow_xcb(int width, int height, const char* title) {
         fprintf(stderr, "Failed to connect to display!\n");
         return 1;
     }
-    shmid = shmget(IPC_PRIVATE, width * height * 4, IPC_CREAT|0777);
+    int shmFd = shm_open("xgfxShmFile", O_CREAT | O_RDWR, 0600);
+    shm_unlink("xgfxShmFile");
+    if (shmFd == -1) {
+        fprintf(stderr, "Failed to create shm file\n");
+        return 1;
+    }
+    if (ftruncate(shmFd, image.size) == -1) {
+        fprintf(stderr, "Failed to set shm file size\n");
+        return 1;
+    }
     segment = xcb_generate_id(connection);
-    xcb_shm_attach(connection, segment, shmid, 0);
-    image.data = shmat(shmid, 0, 0);
+    xcb_shm_attach_fd(connection, segment, shmFd, 1);
+    image.data = mmap(NULL, width * height * 4, PROT_READ | PROT_WRITE, MAP_SHARED, shmFd, 0);
+    if (image.data == NULL) {
+        fprintf(stderr, "Failed to map framebuffer\n");
+        return 1;
+    }
     image.width = width;
     image.height = height;
     image.depth = 4;
@@ -66,13 +79,13 @@ int checkWindowEvent_xcb(Event* event) {
             case XCB_CLIENT_MESSAGE: {
             xcb_client_message_event_t* clientMessageEvent = (xcb_client_message_event_t*)xcbevent;
             if (clientMessageEvent->data.data32[0] == wmDeleteMessageXcb) {
-                shmdt(image.data);
-                shmctl(shmid, IPC_RMID, NULL);
                 xcb_destroy_window(connection, windowXcb);
                 xcb_disconnect(connection);
                 event->type = WINDOW_CLOSE;
+                free(xcbevent);
                 return 1;
             };
+            free(xcbevent);
             return 0;
             }
             case XCB_KEY_PRESS: {
@@ -80,6 +93,7 @@ int checkWindowEvent_xcb(Event* event) {
             event->type = KEY_CHANGE;
             event->keychange.state = 1;
             event->keychange.key = keypressEvent->detail - 8;
+            free(xcbevent);
             return 1;
             }
 
@@ -88,6 +102,7 @@ int checkWindowEvent_xcb(Event* event) {
             event->type = KEY_CHANGE;
             event->keychange.state = 0;
             event->keychange.key = keyreleaseEvent->detail - 8;
+            free(xcbevent);
             return 1;
             }
 
@@ -96,6 +111,7 @@ int checkWindowEvent_xcb(Event* event) {
             event->type = MOUSE_MOVE;
             event->mousemove.x = motionnotifyEvent->event_x;
             event->mousemove.y = motionnotifyEvent->event_y;
+            free(xcbevent);
             return 1;
             }
 
@@ -104,6 +120,7 @@ int checkWindowEvent_xcb(Event* event) {
             event->type = MOUSE_BUTTON;
             event->mousebutton.state = 1;
             event->mousebutton.button = buttonpressEvent->detail;
+            free(xcbevent);
             return 1;
             }
 
@@ -112,14 +129,16 @@ int checkWindowEvent_xcb(Event* event) {
             event->type = MOUSE_BUTTON;
             event->mousebutton.state = 0;
             event->mousebutton.button = buttonreleaseEvent->detail;
+            free(xcbevent);
             return 1;
             }
 
             default:
+            free(xcbevent);
             return 0;
         }
-        free(xcbevent);
     }
+    return 0;
 }
 
 void updateWindow_xcb() {
