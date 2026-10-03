@@ -29,13 +29,14 @@ int initWindow_xcb(int width, int height, const char* title) {
         fprintf(stderr, "Failed to create shm file\n");
         return 1;
     }
+    image.size = width*height*4;
     if (ftruncate(shmFd, image.size) == -1) {
         fprintf(stderr, "Failed to set shm file size\n");
         return 1;
     }
     segment = xcb_generate_id(connection);
     xcb_shm_attach_fd(connection, segment, shmFd, 1);
-    image.data = mmap(NULL, width * height * 4, PROT_READ | PROT_WRITE, MAP_SHARED, shmFd, 0);
+    image.data = mmap(NULL, image.size, PROT_READ | PROT_WRITE, MAP_SHARED, shmFd, 0);
     if (image.data == NULL) {
         fprintf(stderr, "Failed to map framebuffer\n");
         return 1;
@@ -43,7 +44,6 @@ int initWindow_xcb(int width, int height, const char* title) {
     image.width = width;
     image.height = height;
     image.depth = 4;
-    image.size = width*height*4;
     image.stride = width*4;
 
     xcb_screen_t* screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
